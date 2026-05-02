@@ -40,7 +40,6 @@ const vscode = __importStar(require("vscode"));
 const svg_process_1 = require("./svg-process");
 const COMMAND_ID = 'svg-to-vue.generateComponents';
 const OUTPUT_CHANNEL_NAME = 'SVG to Vue';
-const DEFAULT_ICON_SIZE = 24;
 function activate(context) {
     const output = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
     const disposable = vscode.commands.registerCommand(COMMAND_ID, async (uri) => {
@@ -64,12 +63,14 @@ function activate(context) {
             }
             const workspaceRoot = getWorkspaceRootForSource(workspaceFolders, folderUri);
             const { srcFolder, isNuxt } = await resolveSourceOutputFolder(workspaceRoot, folderUri, output);
+            console.log("OUTPUT ROOT:", srcFolder.fsPath);
             const iconsFolder = vscode.Uri.joinPath(srcFolder, 'icons');
             const componentsFolder = vscode.Uri.joinPath(srcFolder, 'components');
             await ensureDirectory(iconsFolder);
+            await clearIconsFolderVueFiles(iconsFolder);
             await ensureDirectory(componentsFolder);
             if (isNuxt) {
-                output.appendLine('Detected Nuxt project; using app/src output path.');
+                output.appendLine('Detected Nuxt project; using app root for output.');
                 try {
                     await ensureNuxtComponentsConfig(workspaceRoot, output);
                 }
@@ -79,6 +80,7 @@ function activate(context) {
             }
             output.appendLine(`Source output folder: ${srcFolder.fsPath}`);
             output.appendLine(`Icons output folder: ${iconsFolder.fsPath}`);
+            output.appendLine(`Components output folder: ${componentsFolder.fsPath}`);
             let generatedCount = 0;
             const registryEntries = [];
             const usedNames = new Set();
@@ -325,8 +327,12 @@ async function resolveComponentsFolder(workspaceRoot, sourceFolderUri, output) {
     return { componentsFolder: componentsUri, isNuxt: false };
 }
 async function resolveSourceOutputFolder(workspaceRoot, sourceFolderUri, output) {
-    const resolved = await resolveComponentsFolder(workspaceRoot, sourceFolderUri, output);
-    return { srcFolder: vscode.Uri.joinPath(workspaceRoot, 'src'), isNuxt: resolved.isNuxt };
+    const { componentsFolder, isNuxt } = await resolveComponentsFolder(workspaceRoot, sourceFolderUri, output);
+    const root = vscode.Uri.file(path.dirname(componentsFolder.fsPath));
+    return {
+        srcFolder: root,
+        isNuxt
+    };
 }
 function svgFileNameToKebabCase(file) {
     const base = file.path.split(/[\\/]/).pop() || 'Icon';
@@ -361,27 +367,20 @@ function kebabToPascal(value) {
 async function writeIconRegistry(iconsFolder, entries) {
     const importLines = entries.map(entry => `import ${entry.importName} from "./${entry.fileName}"`);
     const registryLines = entries.map(entry => `  "${entry.iconName}": ${entry.importName}`);
-    const source = `${importLines.join('\n')}\n\n` +
-        `export const icons = {\n${registryLines.join(',\n')}\n} as const\n\n` +
-        `export type IconName = keyof typeof icons\n`;
+    const source = `${importLines.join('\n')}\n\n` + `export const icons = {\n${registryLines.join(',\n')}\n}\n`;
     await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(iconsFolder, 'index.ts'), Buffer.from(source, 'utf8'));
 }
 async function writeGlobalIconComponent(componentsFolder) {
     const source = `<script setup lang="ts">
 import { computed } from "vue"
-import { icons, type IconName } from "@/icons"
+import { icons } from "../icons"
 
-const props = withDefaults(
-  defineProps<{
-    name: IconName | string
-    size?: number | string
-  }>(),
-  {
-    size: ${DEFAULT_ICON_SIZE}
-  }
-)
+const props = defineProps({
+  name: { type: String, required: true },
+  size: { type: [Number, String], default: 24 }
+})
 
-const iconComponent = computed(() => icons[props.name as IconName])
+const iconComponent = computed(() => icons[props.name])
 </script>
 
 <template>
@@ -393,6 +392,20 @@ const iconComponent = computed(() => icons[props.name as IconName])
 </template>
 `;
     await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(componentsFolder, 'Icon.vue'), Buffer.from(source, 'utf8'));
+}
+/** Remove previous icon SFCs so re-runs do not leave stale files when SVGs are removed or renamed. */
+async function clearIconsFolderVueFiles(iconsFolder) {
+    try {
+        const entries = await vscode.workspace.fs.readDirectory(iconsFolder);
+        for (const [name, type] of entries) {
+            if (type === vscode.FileType.File && name.toLowerCase().endsWith('.vue')) {
+                await vscode.workspace.fs.delete(vscode.Uri.joinPath(iconsFolder, name));
+            }
+        }
+    }
+    catch {
+        // folder unreadable; generation will attempt to create files anyway
+    }
 }
 function convertSvgToVueComponent(_file, rawSvg) {
     if (!/<svg[\s\S]*<\/svg>/i.test(rawSvg.trim())) {
@@ -474,7 +487,7 @@ async function ensureNuxtComponentsConfig(workspaceRoot, output) {
     }
     try {
         await vscode.workspace.fs.writeFile(nuxtConfigUri, Buffer.from(updatedText, 'utf8'));
-        output.appendLine(`Updated Nuxt config to register '~/components/icons' with pathPrefix: false.`);
+        output.appendLine(`Updated Nuxt config to register '~/components' with pathPrefix: false.`);
     }
     catch (err) {
         output.appendLine(`Failed to write updated Nuxt config: ${String(err)}`);
@@ -545,8 +558,7 @@ function editNuxtConfigObjectText(objectText) {
 }
 function ensureComponentsProperty(objectText) {
     const hasRootPath = /['"`]~\/components['"`]/.test(objectText);
-    const hasIconsPath = /['"`]~\/components\/icons['"`]/.test(objectText);
-    if (hasRootPath && hasIconsPath) {
+    if (hasRootPath) {
         return null;
     }
     const componentsMatch = /components\s*:\s*\[/m.exec(objectText);
@@ -577,8 +589,7 @@ function appendToExistingComponentsArray(objectText, bracketIndex) {
     }
     const arrayText = objectText.slice(bracketIndex, endIndex + 1);
     const hasRootPath = /['"`]~\/components['"`]/.test(arrayText);
-    const hasIconsPath = /['"`]~\/components\/icons['"`]/.test(arrayText);
-    if (hasRootPath && hasIconsPath) {
+    if (hasRootPath) {
         return null;
     }
     const beforeArray = objectText.slice(0, bracketIndex);
@@ -600,14 +611,6 @@ function appendToExistingComponentsArray(objectText, bracketIndex) {
                 innerIndent +
                 'pathPrefix: false\n' +
                 entryIndent +
-                '},\n' +
-                entryIndent +
-                '{\n' +
-                innerIndent +
-                "path: '~/components/icons',\n" +
-                innerIndent +
-                'pathPrefix: false\n' +
-                entryIndent +
                 '}\n' +
                 propertyIndent +
                 ']';
@@ -619,31 +622,15 @@ function appendToExistingComponentsArray(objectText, bracketIndex) {
         if (needsComma) {
             contentBeforeClosing = inner.replace(/\s*$/, ',');
         }
-        let additions = '';
-        if (!hasRootPath) {
-            additions +=
-                '\n' +
-                    entryIndent +
-                    '{\n' +
-                    innerIndent +
-                    "path: '~/components',\n" +
-                    innerIndent +
-                    'pathPrefix: false\n' +
-                    entryIndent +
-                    '}';
-        }
-        if (!hasIconsPath) {
-            additions +=
-                '\n' +
-                    entryIndent +
-                    '{\n' +
-                    innerIndent +
-                    "path: '~/components/icons',\n" +
-                    innerIndent +
-                    'pathPrefix: false\n' +
-                    entryIndent +
-                    '}';
-        }
+        const additions = '\n' +
+            entryIndent +
+            '{\n' +
+            innerIndent +
+            "path: '~/components',\n" +
+            innerIndent +
+            'pathPrefix: false\n' +
+            entryIndent +
+            '}';
         newArrayText = '[' + contentBeforeClosing + additions + '\n' + propertyIndent + ']';
     }
     return beforeArray + newArrayText + afterArray;
@@ -676,14 +663,6 @@ function addNewComponentsProperty(objectText) {
         '  {\n' +
         indent +
         "    path: '~/components',\n" +
-        indent +
-        '    pathPrefix: false\n' +
-        indent +
-        '  },\n' +
-        indent +
-        '  {\n' +
-        indent +
-        "    path: '~/components/icons',\n" +
         indent +
         '    pathPrefix: false\n' +
         indent +

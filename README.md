@@ -1,6 +1,6 @@
 # SVG to Vue
 
-Generate Vue components instantly from SVG icons.
+Turn a folder of SVG files into a **centralized Vue icon system**: kebab-case SFCs under `src/icons`, a single registry, and a global `<Icon />` wrapper. SVG output is optimized with SVGO (`preset-default`), `fill` is normalized to `currentColor`, and the root `viewBox` is preserved.
 
 ![Preview](images/preview.png)
 
@@ -8,67 +8,53 @@ Generate Vue components instantly from SVG icons.
 
 ## Features
 
-* Convert SVG files into reusable Vue components
-* Automatically generate a centralized icon system
-* Dynamic `<Icon />` component for easy usage
-* Optimized SVG output using SVGO
-* Clean and consistent icon structure
+* **`<Icon name="..." />`** — one component for all icons (no per-icon auto-import)
+* Per-icon Vue SFCs in `src/icons/` for the registry only
+* `src/icons/index.ts` exports a kebab-case `icons` map
+* `src/components/Icon.vue` resolves the map and forwards `size`
+* Nuxt-friendly: keep `Icon.vue` under `components/` so Nuxt can auto-import **only** `Icon`, not each icon
 
 ---
 
-## How It Works
+## How it works
 
-1. Select a folder containing `.svg` files
-2. The extension will:
+1. Choose a folder that contains `.svg` files (recursive scan).
+2. The extension writes:
 
-   * Scan all SVG files (recursively)
-   * Convert them into Vue components
-   * Generate a centralized icon registry
-   * Create a dynamic `<Icon />` component
+   * `src/icons/<kebab-name>.vue` — one script + template per SVG
+   * `src/icons/index.ts` — imports and `export const icons = { "…": Component, … }`
+   * `src/components/Icon.vue` — `import { icons } from "@/icons"` and dynamic `<component :is="…" />`
+
+Each run **overwrites** those outputs. Existing `src/icons/*.vue` files are cleared first so removed or renamed SVGs do not leave stale components.
 
 ---
 
 ## Usage
 
-### 1. Generate Icons
+### Generate icons
 
-#### Command Palette
+**Command Palette:** `Ctrl+Shift+P` → **SVG to Vue: Generate Icon System**
 
-* Open Command Palette: `Ctrl + Shift + P`
-* Run:
+**Explorer:** Right-click a folder → **SVG to Vue: Generate Icon System**
 
-```
-SVG to Vue: Generate Components
-```
+Configure your app so `@` points at `src` (Vite/Vue CLI/Nuxt as usual) so `Icon.vue` can import `@/icons`.
 
-#### Explorer
+### Use icons in templates
 
-* Right-click any folder
-* Select:
-
-```
-SVG to Vue: Generate Components
-```
-
----
-
-### 2. Use Icons in Your App
-
-#### Basic usage
+Prefer the icon system — you do not import each file:
 
 ```vue
 <Icon name="user-check" />
+<Icon name="arrow-left" size="32" />
 ```
 
-#### With custom size
+Registry keys and file names are **kebab-case** and match the generated SVG basename (with deduplication suffixes like `icon-2` if needed).
 
-```vue
-<Icon name="user-check" size="32" />
-```
+This approach gives you a **scalable** icon setup: add SVGs, re-run the command, and reference them by name instead of maintaining a growing list of manual imports.
 
 ---
 
-### 3. Example Output Structure
+## Output layout
 
 ```
 src/
@@ -77,14 +63,15 @@ src/
     arrow-left.vue
     close.vue
     index.ts
-
   components/
     Icon.vue
 ```
 
 ---
 
-### 4. Direct Component Usage (optional)
+## Optional: direct icon import
+
+You can still import a single SFC when a rare case needs it:
 
 ```vue
 <script setup>
@@ -92,34 +79,21 @@ import UserCheck from '@/icons/user-check.vue'
 </script>
 
 <template>
-  <UserCheck size="24" />
+  <UserCheck :size="24" />
 </template>
 ```
 
 ---
 
-## Web Companion
+## Web companion
 
-Try the web version:
-
-https://svg-to-vue.app
-
-Install extension directly:
-
-vscode:extension/svg-to-vue.svg-to-vue
+* App: https://svg-to-vue.app  
+* Extension: vscode:extension/svg-to-vue.svg-to-vue
 
 ---
 
 ## Notes
 
-* Icons use `fill="currentColor"` → controlled via CSS
-* All unnecessary SVG data is removed
-* ViewBox is preserved for proper scaling
-
----
-
-## Why This Exists
-
-Managing raw SVGs is messy.
-
-This tool turns them into a clean, scalable Vue icon system with minimal effort.
+* Icons use `fill="currentColor"` so color comes from CSS (`color` on the parent or `Icon`).
+* Root SVG `width` / `height` are not kept on the outer `<svg>`; sizing is via the `size` prop.
+* `viewBox` is preserved (or derived when missing) so scaling stays correct.

@@ -1,7 +1,7 @@
 {
   "name": "svg-to-vue",
   "displayName": "SVG to Vue",
-  "description": "Generate Vue components instantly from SVG icons. [Try the Web Version](https://svg-to-vue.app)",
+  "description": "Generate a centralized Vue icon system from SVG files (registry + Icon component). [Try the Web Version](https://svg-to-vue.app)",
   "version": "0.0.1",
   "publisher": "svg-to-vue",
   "engines": {
@@ -19,7 +19,7 @@
     "commands": [
       {
         "command": "svg-to-vue.generateComponents",
-        "title": "SVG to Vue: Generate Components",
+        "title": "SVG to Vue: Generate Icon System",
         "category": "SVG to Vue"
       }
     ],
