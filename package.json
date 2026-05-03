@@ -3,11 +3,11 @@
   "displayName": "SVG to Vue",
   "description": "Generate a centralized Vue icon system from SVG files (registry + Icon component). [Try the Web Version](https://svg-to-vue.app)",
   "version": "0.0.1",
-  "publisher": "svg-to-vue",
+  "publisher": "Tholfikar Matar",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "icon": "images/icon.png",
+  "icon": "assets/icon.png",
   "categories": [
     "Other"
   ],
