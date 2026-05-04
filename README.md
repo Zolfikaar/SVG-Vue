@@ -4,13 +4,12 @@ Turn a folder of SVG files into a **centralized Vue icon system**: kebab-case SF
 
 ## Preview
 
-![Demo](./assets/demo.png)
+![Demo](https://github.com/Zolfikaar/SVG-Vue/main/assets/preview.png)
 
 ## Generated Icons
 
-![Icons](./assets/demo-1.png)
-![Icons](./assets/demo-2.png)
-![Icons](./assets/demo-3.png)
+![Icons](https://github.com/Zolfikaar/SVG-Vue/main/assets/demo.png)
+
 
 ---
 
