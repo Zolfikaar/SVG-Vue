@@ -3,6 +3,7 @@
 .git/**
 .gitignore
 .vsc-extension-quickstart.md
+src/**
 
 node_modules/**
 package-lock.json
@@ -12,8 +13,7 @@ yarn.lock
 .prettierrc
 tsconfig.json
 
-# تجاهل كل محتويات مجلد assets
 assets/*
-
-# لكن لا تتجاهل ملف الأيقونة تحديداً
 !assets/icon.png
+
+!dist/**

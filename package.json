@@ -2,7 +2,7 @@
   "name": "svg-to-vue",
   "displayName": "SVG to Vue",
   "description": "Generate a centralized Vue icon system from SVG files (registry + Icon component).",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "UrLabs",
   "homepage": "https://svg-vue-web-hlrx-14d65rndo-fukarwork-5039s-projects.vercel.app/",
   "repository": {
