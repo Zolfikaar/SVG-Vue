@@ -7,8 +7,8 @@ Turn a folder of SVG files into a **centralized Vue icon system**: kebab-case SF
 ![Preview](https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/preview.png)
 
 ## Generated Icons
-![Demo](https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/demo.mp4)
-<!-- <video src="https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/demo.mp4" controls width="600"></video> -->
+<!-- ![Demo](https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/demo.mp4) -->
+<video src="https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/demo.mp4" controls width="600"></video>
 
 ---
 
