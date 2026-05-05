@@ -1,5 +1,4 @@
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { optimize } from 'svgo';
 import SvgPath from 'svgpath';
 import { svgPathBbox } from 'svg-path-bbox';
 
@@ -356,11 +355,34 @@ export function parseViewBoxFromSvgRoot(svg: Element): string | null {
 }
 
 export function optimizeSvg(svg: string): string {
+  const optimize = getSvgoOptimize();
+  if (!optimize) {
+    return svg;
+  }
+
   const result = optimize(svg, {
     multipass: true,
     plugins: ['preset-default']
   });
-  return result.data;
+  return typeof result?.data === 'string' ? result.data : svg;
+}
+
+type SvgoOptimize = (input: string, options: { multipass: boolean; plugins: string[] }) => { data: string };
+let svgoOptimizeCache: SvgoOptimize | null | undefined;
+
+function getSvgoOptimize(): SvgoOptimize | null {
+  if (svgoOptimizeCache !== undefined) {
+    return svgoOptimizeCache;
+  }
+
+  try {
+    const svgo = require('svgo') as { optimize?: SvgoOptimize };
+    svgoOptimizeCache = typeof svgo.optimize === 'function' ? svgo.optimize : null;
+  } catch {
+    svgoOptimizeCache = null;
+  }
+
+  return svgoOptimizeCache;
 }
 
 const parser = new DOMParser();

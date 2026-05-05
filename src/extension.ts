@@ -360,7 +360,7 @@ async function resolveSourceOutputFolder(
 }
 
 function svgFileNameToKebabCase(file: vscode.Uri): string {
-  const base = file.path.split(/[\\/]/).pop() || 'Icon';
+  const base = path.basename(file.fsPath || '') || 'Icon';
   const withoutExt = base.replace(/\.svg$/i, '');
   const normalized = withoutExt
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')

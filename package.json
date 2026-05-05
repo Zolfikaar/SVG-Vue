@@ -2,7 +2,7 @@
   "name": "svg-to-vue",
   "displayName": "SVG to Vue",
   "description": "Generate a centralized Vue icon system from SVG files (registry + Icon component).",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "publisher": "UrLabs",
   "homepage": "https://svg-vue-web-hlrx-14d65rndo-fukarwork-5039s-projects.vercel.app/",
   "repository": {
@@ -45,14 +45,16 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "tsc -p ./",
+    "vscode:prepublish": "npm run package-extension",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "package-extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/svg-path-bbox": "^1.0.0",
     "@types/vscode": "^1.85.0",
+    "esbuild": "^0.28.0",
     "typescript": "^5.0.0",
     "vsce": "^2.15.0"
   },
