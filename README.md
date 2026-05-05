@@ -2,12 +2,13 @@
 
 Turn a folder of SVG files into a **centralized Vue icon system**: kebab-case SFCs under `src/icons`, a single registry, and a global `<Icon />` wrapper. SVG output is optimized with SVGO (`preset-default`), `fill` is normalized to `currentColor`, and the root `viewBox` is preserved.
 
+[Try the Web Version](https://svg-to-vue.app)
 
-## Preview
-![Preview](assets/preview.png)
+![Preview](https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/preview.png)
 
-## Generated Icons
-![Demo GIF](assets/demo.gif)
+### Demo
+![Demo GIF](https://raw.githubusercontent.com/Zolfikaar/SVG-Vue/main/assets/demo.gif)
+
 ---
 
 ## Features
