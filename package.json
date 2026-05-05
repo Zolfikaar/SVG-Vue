@@ -2,15 +2,15 @@
   "name": "svg-to-vue",
   "displayName": "SVG to Vue",
   "description": "Generate a centralized Vue icon system from SVG files (registry + Icon component).",
-  "version": "0.0.1",
-  "publisher": "Tholfikar Matar",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "homepage": "https://svg-to-vue.app",
+  "version": "0.0.2",
+  "publisher": "UrLabs",
+  "homepage": "https://svg-vue-web-hlrx-14d65rndo-fukarwork-5039s-projects.vercel.app/",
   "repository": {
     "type": "git",
     "url": "https://github.com/Zolfikaar/SVG-Vue.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
   },
   "icon": "assets/icon.png",
   "categories": [
